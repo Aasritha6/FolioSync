@@ -353,7 +353,7 @@ class PortfolioContext(BaseModel):
 async def get_macro_impact(portfolio: PortfolioContext = Body(default=PortfolioContext())):
     headlines = []
     try:
-        news_data = await asyncio.to_thread(call_wire, "e8f7cfde-7052-4dd5-80e5-5473707347b3", {})
+        news_data = await asyncio.to_thread(call_wire, "mc_news", {})
         if isinstance(news_data, list):
             headlines = [i.get("title", i.get("headline", "")) for i in news_data[:6] if i.get("title") or i.get("headline")]
         elif isinstance(news_data, dict):
