@@ -355,7 +355,17 @@ export default function PortfolioView({ portfolio, macro, ipo, advancedData, mac
                       {advancedData?.rbi?.status === 'processing' || !advancedData?.rbi ? (
                          <div className="flex items-center justify-center h-24 text-xs text-gray-400">Fetching latest RBI data...</div>
                       ) : (
-                         <div className="text-sm text-gray-600">Forex data loaded from RBI endpoint.</div>
+                         <div className="flex flex-col justify-center h-full pb-4">
+                           <p className="text-3xl font-bold text-gray-900">
+                             ${((advancedData.rbi.latest_amount || 0) / 1e9).toFixed(1)} Billion
+                           </p>
+                           <p className="text-sm text-gray-500 mt-2 font-medium">
+                             Total Reserves ({advancedData.rbi.currency_code})
+                           </p>
+                           <p className="text-xs text-gray-400 mt-1">
+                             As of {new Date(advancedData.rbi.latest_report_date).toLocaleDateString()}
+                           </p>
+                         </div>
                       )}
                     </div>
                   </div>
