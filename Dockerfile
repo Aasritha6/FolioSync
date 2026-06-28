@@ -10,9 +10,14 @@ RUN npm run build
 FROM python:3.11-slim
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies required by casparser and pypdfium2
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libgdk-pixbuf2.0-0 \
+    libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
@@ -25,9 +30,8 @@ COPY backend/ ./backend/
 # Copy built frontend from Stage 1 to a static dir
 COPY --from=frontend-builder /app/frontend/dist /app/static
 
-# Modify FastAPI to serve static files if running from Docker
-# This is a one-line addition to main.py to mount the frontend
-RUN echo '\nfrom fastapi.staticfiles import StaticFiles\nfrom fastapi.responses import FileResponse\nimport os\nif os.path.exists("/app/static"):\n    app.mount("/", StaticFiles(directory="/app/static", html=True), name="static")\n' >> backend/app/main.py
+# Create the static file mount script (appended to main.py at build time)
+RUN printf '\nfrom fastapi.staticfiles import StaticFiles\nimport os\nif os.path.exists("/app/static"):\n    app.mount("/", StaticFiles(directory="/app/static", html=True), name="static")\n' >> backend/app/main.py
 
 EXPOSE 8000
 
