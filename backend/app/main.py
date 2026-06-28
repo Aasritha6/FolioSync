@@ -363,14 +363,6 @@ async def get_macro_impact(portfolio: PortfolioContext = Body(default=PortfolioC
         print(f"Macro news error: {e}")
 
     if not headlines:
-        try:
-            tv_data = await asyncio.to_thread(call_wire, "5cdf2cd5-a0c3-4774-9fe9-ce2847210dfa", {})
-            if isinstance(tv_data, list):
-                headlines = [i.get("title", "") for i in tv_data[:6]]
-        except Exception as e:
-            print(f"TV fallback error: {e}")
-
-    if not headlines:
         headlines = [
             "RBI holds repo rate at 6.5% for 8th consecutive meeting",
             "India CPI inflation eases to 4.75% in May",
@@ -399,13 +391,6 @@ async def get_macro_impact(portfolio: PortfolioContext = Body(default=PortfolioC
 async def get_ipo():
     try:
         return await asyncio.to_thread(call_wire, "mc_ipo", {}) or {}
-    except:
-        return {}
-
-@app.get("/api/stock/{symbol}")
-async def get_stock_quote(symbol: str):
-    try:
-        return await asyncio.to_thread(call_wire, "661cf7ce-77f3-4cd4-b02f-8ff875613f37", {"ticker": symbol}) or {}
     except:
         return {}
 
