@@ -10,13 +10,12 @@ RUN npm run build
 FROM python:3.11-slim
 WORKDIR /app
 
-# Install system dependencies required by casparser and pypdfium2
+# Cache bust: v2
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libcairo2 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
-    libgdk-pixbuf-2.0-0 \
     libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
