@@ -395,16 +395,12 @@ async def get_macro_impact(portfolio: PortfolioContext = Body(default=PortfolioC
     }
 
 
-@app.get("/api/market")
-async def get_market_overview():
-    result = {}
-    for cat in ["gainers", "losers"]:
-        try:
-            data = await asyncio.to_thread(call_wire, "95555e4c-fb90-4f79-8b42-dfa31768944d", {"category": cat, "count": 5})
-            result[cat] = data if isinstance(data, list) else []
-        except:
-            result[cat] = []
-    return result
+@app.get("/api/ipo")
+async def get_ipo():
+    try:
+        return await asyncio.to_thread(call_wire, "mc_ipo", {}) or {}
+    except:
+        return {}
 
 @app.get("/api/stock/{symbol}")
 async def get_stock_quote(symbol: str):

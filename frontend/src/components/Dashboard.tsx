@@ -8,7 +8,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 export default function Dashboard() {
   const [portfolio, setPortfolio]     = useState<any>(null);
   const [macro, setMacro]             = useState<any>(null);
-  const [market, setMarket]           = useState<any>(null);
+  const [ipo, setIpo]                 = useState<any>(null);
   const [loading, setLoading]         = useState(false);
   const [macroLoading, setMacroLoading] = useState(false);
   const [dragOver, setDragOver]       = useState(false);
@@ -31,7 +31,7 @@ export default function Dashboard() {
       setPortfolio(res.data);
       setNeedsPassword(false);
       setPendingFile(null);
-      loadMacroAndMarket(res.data);
+      loadMacroAndIPO(res.data);
     } catch (err: any) {
       const status = err?.response?.status;
       const detail = err?.response?.data?.detail || 'Upload failed.';
@@ -59,15 +59,15 @@ export default function Dashboard() {
     if (pendingFile && password) uploadFile(pendingFile, password);
   };
 
-  const loadMacroAndMarket = async (portfolioData: any) => {
+  const loadMacroAndIPO = async (portfolioData: any) => {
     setMacroLoading(true);
     try {
-      const [macroRes, marketRes] = await Promise.allSettled([
+      const [macroRes, ipoRes] = await Promise.allSettled([
         axios.post(`${API_BASE}/macro`, portfolioData),
-        axios.get(`${API_BASE}/market`),
+        axios.get(`${API_BASE}/ipo`),
       ]);
       if (macroRes.status === 'fulfilled') setMacro(macroRes.value.data);
-      if (marketRes.status  === 'fulfilled') setMarket(marketRes.value.data);
+      if (ipoRes.status  === 'fulfilled') setIpo(ipoRes.value.data);
     } catch (e) {
       console.error(e);
     } finally {
@@ -90,7 +90,7 @@ export default function Dashboard() {
   const reset = () => {
     setPortfolio(null);
     setMacro(null);
-    setMarket(null);
+    setIpo(null);
     setError('');
     setNeedsPassword(false);
     setPendingFile(null);
@@ -204,7 +204,7 @@ export default function Dashboard() {
           <PortfolioView
             portfolio={portfolio}
             macro={macro}
-            market={market}
+            ipo={ipo}
             macroLoading={macroLoading}
             onReset={reset}
           />
