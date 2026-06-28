@@ -5,5 +5,7 @@ casparser
 pandas
 groq
 pydantic
-websockets
 openpyxl
+python-dotenv
+pypdfium2
+httpx

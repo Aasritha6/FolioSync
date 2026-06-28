@@ -8,12 +8,15 @@ import io
 import os
 import re
 import tempfile
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI(title="FolioSync API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -415,14 +418,3 @@ def get_stock_quote(symbol: str):
     except:
         return {}
 
-@app.get("/api/overlap")
-def get_overlap():
-    return {"nodes": [], "links": []}
-
-@app.get("/api/pledge")
-def get_pledge():
-    return []
-
-@app.get("/api/technical")
-def get_technical():
-    return []

@@ -1,6 +1,7 @@
 # Python
-__pycache__/
+**/__pycache__/
 *.py[cod]
+*.pyo
 venv/
 .env
 
@@ -12,3 +13,4 @@ dist/
 # System
 .DS_Store
 Thumbs.db
+*.log
