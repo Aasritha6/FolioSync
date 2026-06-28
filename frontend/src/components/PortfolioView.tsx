@@ -252,7 +252,6 @@ export default function PortfolioView({ portfolio, macro, ipo, macroLoading, onR
                       </div>
                     ))}
                   </div>
-                  </div>
                 </div>
               </div>
             ) : (
