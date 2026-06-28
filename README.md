@@ -14,9 +14,8 @@ A real-time investment intelligence dashboard that parses Indian portfolio state
 |---------|--------|-------------|
 | **PDF/CSV Ingestion** | ✅ Live | Upload CAMS CAS PDFs (password-protected or mock) or Groww/Zerodha CSVs |
 | **AI Macro Intelligence** | ✅ Live | Groq LLaMA 3.1 analyzes live news against your specific holdings |
+| **Advanced Market Data**| ✅ Live | Live data on Market Breadth, 52W Highs, RBI Forex, Announcements |
 | **IPO Tracker** | ✅ Live | Real-time IPO subscription data via Anakin Wire |
-| **Market Overview** | ✅ Live | Top gainers/losers via Anakin Wire |
-| **Stock Quotes** | ✅ Live | Individual stock lookup via Anakin Wire |
 
 ## 🏗️ Architecture
 
@@ -108,10 +107,12 @@ foliosync/
 | Wire Action ID | Purpose |
 |----------------|---------|
 | `mc_ipo` | IPO subscription data |
-| `e8f7cfde-...` | Macro financial news |
-| `5cdf2cd5-...` | TV news fallback |
-| `95555e4c-...` | Market gainers/losers |
-| `661cf7ce-...` | Stock quotes |
+| `mc_news` | Macro financial news for AI |
+| `scr_company_documents` | Corporate Announcements |
+| `act_morningstar_in_fund_category_returns` | Mutual Fund Category Returns |
+| `nse_52week_highlow` | 52-Week Breakouts |
+| `et_advance_decline` | Market Breadth (Advances/Declines) |
+| `act_data_rbi_org_in_foreign_exchange_reserves` | RBI Forex Reserves |
 
 ## 🤖 AI Analysis
 
