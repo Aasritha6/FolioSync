@@ -175,22 +175,77 @@ export default function PortfolioView({ portfolio, macro, ipo, macroLoading, onR
             macroLoading ? (
               <div className="py-14 flex flex-col items-center gap-3 text-gray-400">
                 <RefreshCw className="w-8 h-8 animate-spin text-blue-400" />
-                <p className="text-sm">Fetching live news + running AI analysis…</p>
+                <p className="text-sm">Fetching live news & running AI analysis on your specific holdings…</p>
               </div>
             ) : macro ? (
-              <div className="space-y-5">
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-5">
-                  <p className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-2">
-                    🤖 AI Portfolio Impact (Groq / LLaMA 3.1)
-                  </p>
-                  <p className="text-gray-800 leading-relaxed text-sm">{macro.portfolio_impact}</p>
+              <div className="space-y-6">
+                {/* AI Executive Summary & Outlook */}
+                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 opacity-10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                  
+                  <div className="flex items-center justify-between mb-4 relative z-10">
+                    <p className="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2">
+                      🤖 AI Command Center
+                    </p>
+                    {macro.structured_analysis?.sentiment && (
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                        macro.structured_analysis.sentiment === 'Bullish' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                        macro.structured_analysis.sentiment === 'Bearish' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                        'bg-gray-500/20 text-gray-300 border border-gray-500/30'
+                      }`}>
+                        Market: {macro.structured_analysis.sentiment}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-4 relative z-10">
+                    <p className="text-base text-gray-100 leading-relaxed">
+                      {macro.structured_analysis?.executive_summary || "Analyzing portfolio..."}
+                    </p>
+                    {macro.structured_analysis?.outlook && (
+                      <div className="bg-white/5 rounded-xl p-4 border border-white/10 border-l-4 border-l-blue-500">
+                        <p className="text-sm text-blue-200 font-semibold mb-1">Coming Days Outlook</p>
+                        <p className="text-sm text-gray-300">{macro.structured_analysis.outlook}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Specific Alerts */}
+                {macro.structured_analysis?.alerts && macro.structured_analysis.alerts.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">⚠️ Specific Asset Alerts</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {macro.structured_analysis.alerts.map((alert: any, i: number) => (
+                        <div key={i} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-bold text-gray-900">{alert.asset}</h4>
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                              alert.impact === 'Bullish' ? 'bg-green-100 text-green-700' :
+                              alert.impact === 'Bearish' ? 'bg-red-100 text-red-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {alert.impact}
+                            </span>
+                          </div>
+                          <div className="bg-gray-50 rounded-lg p-2.5 mb-3 border border-gray-100">
+                            <p className="text-xs text-gray-500 mb-0.5">News Trigger:</p>
+                            <p className="text-xs font-medium text-gray-800">"{alert.news_trigger}"</p>
+                          </div>
+                          <p className="text-sm text-gray-600 leading-relaxed">{alert.reason}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Live Headlines */}
                 <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">📰 Live Headlines</p>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">📰 Live Headlines Analyzed</p>
                   <div className="space-y-2">
                     {(macro.headlines || [macro.headline]).filter(Boolean).map((h: string, i: number) => (
-                      <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                        <span className="w-5 h-5 bg-gray-200 rounded-full text-xs text-gray-500 flex items-center justify-center flex-shrink-0 mt-0.5 font-medium">
+                      <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100">
+                        <span className="w-5 h-5 bg-white border border-gray-200 rounded-full text-xs text-gray-500 flex items-center justify-center flex-shrink-0 mt-0.5 font-medium shadow-sm">
                           {i + 1}
                         </span>
                         <p className="text-sm text-gray-700">{h}</p>
@@ -198,6 +253,7 @@ export default function PortfolioView({ portfolio, macro, ipo, macroLoading, onR
                     ))}
                   </div>
                 </div>
+              </div>
               </div>
             ) : (
               <EmptyState msg="Macro data unavailable right now." />

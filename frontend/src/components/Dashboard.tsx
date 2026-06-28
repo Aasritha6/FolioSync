@@ -31,7 +31,7 @@ export default function Dashboard() {
       setPortfolio(res.data);
       setNeedsPassword(false);
       setPendingFile(null);
-      loadMacroAndIPO();
+      loadMacroAndIPO(res.data);
     } catch (err: any) {
       const status = err?.response?.status;
       const detail = err?.response?.data?.detail || 'Upload failed.';
@@ -59,11 +59,11 @@ export default function Dashboard() {
     if (pendingFile && password) uploadFile(pendingFile, password);
   };
 
-  const loadMacroAndIPO = async () => {
+  const loadMacroAndIPO = async (portfolioData: any) => {
     setMacroLoading(true);
     try {
       const [macroRes, ipoRes] = await Promise.allSettled([
-        axios.get(`${API_BASE}/macro`),
+        axios.post(`${API_BASE}/macro`, portfolioData),
         axios.get(`${API_BASE}/ipo`),
       ]);
       if (macroRes.status === 'fulfilled') setMacro(macroRes.value.data);

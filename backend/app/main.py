@@ -1,5 +1,6 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from .services.anakin_wire import call_wire
 from .services.groq_llm import analyze_macro_impact_with_llm
 import pandas as pd
@@ -340,8 +341,12 @@ def build_cas_response(investor_info: dict, mfs: list, total_val: float, total_i
 
 # ─── Other API Endpoints ─────────────────────────────────────────────────────
 
-@app.get("/api/macro")
-def get_macro_impact():
+class PortfolioContext(BaseModel):
+    stocks: list = []
+    mfs: list = []
+
+@app.post("/api/macro")
+def get_macro_impact(portfolio: PortfolioContext = Body(default=PortfolioContext())):
     headlines = []
     try:
         news_data = call_wire("e8f7cfde-7052-4dd5-80e5-5473707347b3", {})
@@ -370,11 +375,19 @@ def get_macro_impact():
             "FIIs net buyers in Indian equities for third straight month",
         ]
 
+    # Convert Pydantic model to dict to pass to LLM
+    portfolio_dict = portfolio.dict() if portfolio else {}
+    
     analysis = analyze_macro_impact_with_llm(
         news_items=headlines,
-        portfolio_sectors=["Banking", "Technology", "Real Estate", "Consumer", "Energy"]
+        portfolio_context=portfolio_dict
     )
-    return {"headlines": headlines, "headline": headlines[0], "sentiment": "Mixed", "portfolio_impact": analysis}
+    
+    return {
+        "headlines": headlines, 
+        "headline": headlines[0] if headlines else "Market Update", 
+        "structured_analysis": analysis
+    }
 
 
 @app.get("/api/ipo")
