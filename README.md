@@ -1,133 +1,145 @@
 # 📊 FolioSync — Investment Command Center
 
-A real-time investment intelligence dashboard that parses Indian portfolio statements (CAMS CAS PDFs, Groww CSVs) and delivers AI-powered macro analysis, IPO tracking, and portfolio health insights.
+[![Live Demo](https://img.shields.io/badge/Live_Demo-foliosync--production.up.railway.app-success?style=for-the-badge&logo=railway)](https://foliosync-production.up.railway.app)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11+-green?style=for-the-badge&logo=python)](https://python.org)
+[![React](https://img.shields.io/badge/react-19-blue?style=for-the-badge&logo=react)](https://react.dev)
 
-![License](https://img.shields.io/badge/license-MIT-blue)
-![Python](https://img.shields.io/badge/python-3.11+-green)
-![React](https://img.shields.io/badge/react-19-blue)
+A real-time investment intelligence dashboard that parses Indian portfolio statements (CAMS CAS PDFs, Groww/Zerodha CSVs) and delivers AI-powered macro analysis, IPO tracking, and advanced portfolio health insights.
+
+FolioSync bridges the gap between static portfolio trackers and dynamic market intelligence by mapping your specific holdings against live, up-to-the-minute global financial news via Groq's LLaMA 3.1 models and Anakin.io Wire APIs.
 
 ---
 
 ## ✨ Features
 
-| Feature | Status | Description |
-|---------|--------|-------------|
-| **PDF/CSV Ingestion** | ✅ Live | Upload CAMS CAS PDFs (password-protected or mock) or Groww/Zerodha CSVs |
-| **AI Macro Intelligence** | ✅ Live | Groq LLaMA 3.1 analyzes live news against your specific holdings |
-| **Advanced Market Data**| ✅ Live | Live data on Market Breadth, 52W Highs, RBI Forex, Announcements |
-| **IPO Tracker** | ✅ Live | Real-time IPO subscription data via Anakin Wire |
+| Feature | Description |
+|---------|-------------|
+| **PDF/CSV Ingestion** | Securely parse password-protected CAMS CAS PDFs and standard broker CSVs locally. |
+| **AI Macro Intelligence** | Groq LLaMA 3.1 analyzes live news explicitly against your specific portfolio holdings to generate actionable alerts. |
+| **Advanced Market Data** | Live dashboards for Market Breadth (Advances/Declines), 52-Week Breakouts, RBI Forex Reserves, and Corporate Announcements. |
+| **Real-time IPO Tracker** | Up-to-date IPO subscription data and upcoming listings powered by Anakin Wire APIs. |
+
+---
 
 ## 🏗️ Architecture
 
-```
-┌─────────────────────────────────────────┐
-│            Frontend (Vite + React)      │
-│  Dashboard → PortfolioView (Tabs)      │
-│  Upload │ Holdings │ Macro │ IPO       │
-└────────────────┬────────────────────────┘
-                 │ Axios
-┌────────────────▼────────────────────────┐
-│            Backend (FastAPI)            │
-│                                         │
-│  /api/ingest   → casparser + pypdfium2 │
-│  /api/macro    → Anakin Wire + Groq AI │
-│  /api/ipo      → Anakin Wire (mc_ipo)  │
-│  /api/market   → Anakin Wire           │
-│  /api/stock/:s → Anakin Wire           │
-└────────────────┬────────────────────────┘
-                 │
-     ┌───────────┼───────────┐
-     ▼           ▼           ▼
-  Anakin.io   Groq Cloud   casparser
-  (Wire API)  (LLaMA 3.1)  (PDF parse)
+FolioSync uses a modern, decoupled architecture packaged into a single containerized deployment.
+
+```mermaid
+graph TD
+    UI[Frontend: React 19 + Vite + Tailwind] -->|REST API| API[Backend: FastAPI]
+    
+    API -->|Parse| CAS[casparser / pypdfium2]
+    API -->|Fetch News & Market Data| Anakin[Anakin.io Wire API]
+    API -->|Analyze Impact| Groq[Groq Cloud: LLaMA 3.1]
+    
+    Anakin -.->|News & Data| API
+    Groq -.->|Structured JSON Alerts| API
 ```
 
-## 🚀 Quick Start
+---
+
+## 🚀 Getting Started
+
+You can access the live version of this app here: **[FolioSync Live Demo](https://foliosync-production.up.railway.app)**
+
+If you wish to run it locally or deploy your own instance, follow the steps below.
 
 ### Prerequisites
+
 - Python 3.11+
 - Node.js 18+
-- [Anakin API Key](https://anakin.io)
-- [Groq API Key](https://console.groq.com)
+- [Anakin API Key](https://anakin.io) (For live market/IPO data)
+- [Groq API Key](https://console.groq.com) (For LLaMA 3.1 portfolio analysis)
 
-### Backend Setup
+### Local Development Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/FolioSync.git
+   cd FolioSync
+   ```
+
+2. **Backend Setup:**
+   ```bash
+   cd backend
+   python -m venv venv
+   source venv/bin/activate        # On Windows: .\venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   
+   # Add your API keys
+   cp .env.example .env
+   # Edit .env and insert ANAKIN_API_KEY and GROQ_API_KEY
+   
+   # Start the FastAPI server
+   uvicorn app.main:app --port 8000 --reload
+   ```
+
+3. **Frontend Setup:**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+   Open **http://localhost:5173** in your browser.
+
+---
+
+## 🐳 Docker / Production Deployment
+
+FolioSync includes a production-ready `Dockerfile` that builds the React frontend and mounts it statically inside the FastAPI backend. It is optimized for one-click deployment on platforms like [Railway](https://railway.app) or Render.
+
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate        # Windows: .\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+# Build the container
+docker build -t foliosync .
 
-# Create .env from example
-cp .env.example .env
-# Edit .env and add your API keys
-
-uvicorn app.main:app --port 8000 --reload
+# Run the container (Make sure to pass your API keys)
+docker run -p 8000:8000 \
+  -e ANAKIN_API_KEY=your_key \
+  -e GROQ_API_KEY=your_key \
+  foliosync
 ```
 
-### Frontend Setup
-```bash
-cd frontend
-npm install
+Go to `http://localhost:8000` to use the application.
 
-# Optionally create .env for custom API URL
-cp .env.example .env
+---
 
-npm run dev
-```
+## 🔌 Anakin.io Wire Integrations
 
-Open **http://localhost:5173** and upload your portfolio statement.
+This project heavily relies on Anakin.io Wire APIs to fetch real-time Indian financial data.
 
-## 📁 Project Structure
-
-```
-foliosync/
-├── backend/
-│   ├── app/
-│   │   ├── main.py              # FastAPI app, all endpoints
-│   │   └── services/
-│   │       ├── anakin_wire.py   # Anakin Wire API client (async polling)
-│   │       └── groq_llm.py     # Groq LLaMA structured JSON analysis
-│   ├── requirements.txt
-│   └── .env.example
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── Dashboard.tsx    # Upload + orchestration
-│   │   │   └── PortfolioView.tsx # Tabbed display (Holdings/Macro/IPO)
-│   │   ├── App.tsx
-│   │   └── main.tsx
-│   ├── package.json
-│   └── .env.example
-├── .gitignore
-└── README.md
-```
-
-## 🔌 Anakin Wire Integrations
-
-| Wire Action ID | Purpose |
-|----------------|---------|
-| `mc_ipo` | IPO subscription data |
-| `mc_news` | Macro financial news for AI |
-| `scr_company_documents` | Corporate Announcements |
+| Wire Action ID | Data Fetched |
+|----------------|--------------|
+| `mc_news` | Live Macro financial news headlines |
+| `mc_ipo` | IPO subscription and listing data |
+| `scr_company_documents` | Live Corporate Announcements & Filings |
 | `act_morningstar_in_fund_category_returns` | Mutual Fund Category Returns |
-| `nse_52week_highlow` | 52-Week Breakouts |
-| `et_advance_decline` | Market Breadth (Advances/Declines) |
-| `act_data_rbi_org_in_foreign_exchange_reserves` | RBI Forex Reserves |
+| `nse_52week_highlow` | NSE 52-Week Breakouts |
+| `et_advance_decline` | Market Breadth (Advances vs Declines) |
+| `act_data_rbi_org_in_foreign_exchange_reserves` | RBI Forex Reserves Data |
 
-## 🤖 AI Analysis
+---
 
-The Groq LLaMA 3.1 model receives your actual portfolio holdings and live macro news, then returns structured JSON with:
-- **Market Sentiment** (Bullish / Bearish / Neutral)
-- **Executive Summary** of current conditions
-- **Coming Days Outlook** — what to watch
-- **Specific Asset Alerts** — which of *your* holdings are impacted, by which news, and why
+## 🤖 AI Analysis Deep Dive
 
-## 🔒 Security Notes
+Instead of generic market advice, FolioSync provides **hyper-personalized intelligence**. 
 
-- API keys are stored in `.env` (gitignored) and never committed
-- SSL verification is disabled for dev convenience — enable in production
-- CORS is configurable via the `CORS_ORIGINS` env var
+The backend feeds the Groq LLaMA 3.1 model a combination of:
+1. Your actual portfolio holdings (parsed from your CAS PDF/CSV)
+2. Live macro news fetched via Anakin.io
+
+The model then returns a structured JSON payload predicting the direct impact of current events on *your specific assets*. For example, if you hold IT stocks and the US Federal Reserve announces a rate cut, the AI will highlight those specific stocks as "Bullish" with a personalized explanation.
+
+---
+
+## 🔒 Security & Privacy
+
+- **Local Parsing**: PDFs and CSVs are parsed locally in memory. Your financial documents are **never** saved to disk or uploaded to external servers.
+- **Secure API Management**: API keys are securely managed via `.env` files and Docker environment variables.
+
+---
 
 ## 📄 License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
