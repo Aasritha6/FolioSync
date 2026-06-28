@@ -1,9 +1,11 @@
 import urllib.request
 import urllib.error
 import json
-import time
 import os
 import ssl
+from dotenv import load_dotenv
+
+load_dotenv()
 
 ANAKIN_API_KEY = os.getenv("ANAKIN_API_KEY", "")
 BASE_URL = "https://anakin.io/v1/wire/task"

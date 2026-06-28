@@ -78,29 +78,27 @@ def parse_cas_with_text_extraction(filepath: str) -> dict | None:
     # ── Extract portfolio summary ──
     total_value = 0
     total_invested = 0
-    val_m = re.search(r'(?:Current Value|Market Value)[:\s]*[₹\s]*([\d,]+(?:\.\d+)?)', full_text)
+    val_m = re.search(r'(?:Current Value|Market Value)[:\s]*[^0-9]*([\d,]+(?:\.\d+)?)', full_text, re.IGNORECASE)
     if val_m:
         total_value = float(val_m.group(1).replace(",", ""))
-    inv_m = re.search(r'(?:Total Invested|Invested)[:\s]*[₹\s]*([\d,]+(?:\.\d+)?)', full_text)
+    inv_m = re.search(r'(?:Total Invested|Invested)[:\s]*[^0-9]*([\d,]+(?:\.\d+)?)', full_text, re.IGNORECASE)
     if inv_m:
         total_invested = float(inv_m.group(1).replace(",", ""))
 
     # ── Extract fund details ──
-    # Look for "Folio No:" or "Fund:" patterns
     mfs = []
 
-    # Pattern: "Folio No: XXXXX / XX | Fund: FUND NAME | Plan: Direct | Option: Growth"
-    # Then: "Units: XX | NAV: ₹XX | Current Value: ₹XX | Invested: ₹XX | Gain/Loss: ..."
+    # Pattern: "Fund: Mirae Asset Large Cap Fund | ... Units: 981.234 | NAV: ?90.82 | Current Value: ?89,124.40 | Invested: ?70,000"
     fund_blocks = re.findall(
-        r'Folio\s*No[.:]?\s*(\S+).*?Fund:\s*(.+?)(?:\||\n)'
-        r'.*?Units[.:]?\s*([\d,.]+).*?NAV[.:]?\s*[₹]?\s*([\d,.]+)'
-        r'.*?Current Value[.:]?\s*[₹]?\s*([\d,.]+).*?Invested[.:]?\s*[₹]?\s*([\d,.]+)',
+        r'Fund:\s*(.+?)(?:\||\n)'
+        r'.*?Units[.:]?\s*([\d,.]+).*?NAV[.:]?\s*[^0-9]*([\d,.]+)'
+        r'.*?Current Value[.:]?\s*[^0-9]*([\d,.]+).*?Invested[.:]?\s*[^0-9]*([\d,.]+)',
         full_text,
         re.IGNORECASE | re.DOTALL
     )
 
     for match in fund_blocks:
-        folio, fund_name, units, nav, cur_val, invested = match
+        fund_name, units, nav, cur_val, invested = match
         units = float(units.replace(",", ""))
         nav = float(nav.replace(",", ""))
         cur_val = float(cur_val.replace(",", ""))
@@ -108,7 +106,7 @@ def parse_cas_with_text_extraction(filepath: str) -> dict | None:
         pnl = cur_val - invested
         mfs.append({
             "scheme_name": fund_name.strip(),
-            "folio": folio.strip(),
+            "folio": "",
             "amc": "",
             "isin": "",
             "units": round(units, 3),
@@ -117,7 +115,7 @@ def parse_cas_with_text_extraction(filepath: str) -> dict | None:
             "invested": round(invested, 2),
             "pnl": round(pnl, 2),
             "pnl_pct": round(pnl / invested * 100, 2) if invested > 0 else 0,
-            "plan": "Direct",
+            "plan": "",
         })
 
     # If we didn't find the structured pattern, try the table-like pattern
@@ -127,8 +125,8 @@ def parse_cas_with_text_extraction(filepath: str) -> dict | None:
         # Simpler approach: find any "Fund:" lines and associated numeric data
         fund_names = re.findall(r'Fund:\s*(.+?)(?:\||Plan|$)', full_text, re.MULTILINE)
         value_lines = re.findall(
-            r'Units[.:]?\s*([\d,.]+).*?NAV[.:]?\s*[₹]?\s*([\d,.]+).*?'
-            r'Current Value[.:]?\s*[₹]?\s*([\d,.]+).*?Invested[.:]?\s*[₹]?\s*([\d,.]+)',
+            r'Units[.:]?\s*([\d,.]+).*?NAV[.:]?\s*[^0-9]*([\d,.]+).*?'
+            r'Current Value[.:]?\s*[^0-9]*([\d,.]+).*?Invested[.:]?\s*[^0-9]*([\d,.]+)',
             full_text,
             re.IGNORECASE
         )
