@@ -31,5 +31,5 @@ RUN echo '\nfrom fastapi.staticfiles import StaticFiles\nfrom fastapi.responses 
 
 EXPOSE 8000
 
-# Start Uvicorn
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start Uvicorn using the PORT environment variable provided by Railway (defaults to 8000)
+CMD sh -c "uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
