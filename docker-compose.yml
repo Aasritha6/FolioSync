@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  foliosync:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - backend/.env
+    environment:
+      - CORS_ORIGINS=http://localhost:8000
+    restart: unless-stopped

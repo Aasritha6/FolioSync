@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { RefreshCw, TrendingUp, TrendingDown } from 'lucide-react';
 
-interface Props {
+interface PortfolioViewProps {
   portfolio: any;
   macro: any;
-  ipo: any;
+  market: any;
   macroLoading: boolean;
   onReset: () => void;
 }
@@ -19,8 +19,8 @@ const fmtCompact = (n: number) => {
   return `₹${fmt(n)}`;
 };
 
-export default function PortfolioView({ portfolio, macro, ipo, macroLoading, onReset }: Props) {
-  const [activeTab, setActiveTab] = useState<'holdings' | 'macro' | 'ipo'>('holdings');
+export default function PortfolioView({ portfolio, macro, market, macroLoading, onReset }: PortfolioViewProps) {
+  const [activeTab, setActiveTab] = useState<'holdings' | 'macro' | 'market'>('holdings');
 
   const isCAS = portfolio?.type === 'cas_pdf';
   const mfs: any[]    = portfolio?.mfs    || [];
@@ -31,13 +31,10 @@ export default function PortfolioView({ portfolio, macro, ipo, macroLoading, onR
   const totalPnlPct   = portfolio?.total_pnl_pct  || 0;
   const investor      = portfolio?.investor;
 
-  const ipoActive  = ipo?.subscription_status || ipo?.data?.subscription_status || [];
-  const ipoRecent  = ipo?.recently_listed     || ipo?.data?.recently_listed     || [];
-
   const tabs = [
     { key: 'holdings', label: isCAS ? '📂 MF Holdings' : '📋 Stock Holdings' },
     { key: 'macro',    label: '🌐 Macro Intelligence' },
-    { key: 'ipo',      label: '🚀 IPO Tracker' },
+    { key: 'market',   label: '📈 Market Overview' },
   ];
 
   return (
@@ -259,63 +256,63 @@ export default function PortfolioView({ portfolio, macro, ipo, macroLoading, onR
             )
           )}
 
-          {/* ── IPO TAB ────────────────────────────────── */}
-          {activeTab === 'ipo' && (
+          {/* ── MARKET TAB ────────────────────────────────── */}
+          {activeTab === 'market' && (
             <div className="space-y-6">
-              {ipoActive.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">🔴 Live Subscription</p>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-100">
-                          <th className="pb-3 pr-4">Company</th>
-                          <th className="pb-3 pr-4">Type</th>
-                          <th className="pb-3 pr-4 text-right">Price</th>
-                          <th className="pb-3 pr-4 text-right">QIB</th>
-                          <th className="pb-3 pr-4 text-right">NII</th>
-                          <th className="pb-3 text-right">Retail</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50">
-                        {ipoActive.map((item: any, i: number) => (
-                          <tr key={i} className="hover:bg-gray-50 transition-colors">
-                            <td className="py-3 pr-4 font-medium text-gray-900 text-xs">{item.company}</td>
-                            <td className="py-3 pr-4">
-                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                item.type === 'Mainline' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'
-                              }`}>{item.type}</span>
-                            </td>
-                            <td className="py-3 pr-4 text-right text-gray-600 text-xs">{item.issue_price}</td>
-                            <td className="py-3 pr-4 text-right font-semibold text-blue-600 text-xs">{item.qib}</td>
-                            <td className="py-3 pr-4 text-right font-semibold text-green-600 text-xs">{item.nii}</td>
-                            <td className="py-3 text-right font-medium text-gray-700 text-xs">{item.retail}</td>
-                          </tr>
+              {(!market || (!market.gainers && !market.losers)) ? (
+                <EmptyState msg="Market data unavailable right now." />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Gainers */}
+                  {market.gainers && market.gainers.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-green-600 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4" /> Top Gainers
+                      </p>
+                      <div className="bg-white rounded-xl border border-green-100 shadow-sm overflow-hidden">
+                        {market.gainers.map((item: any, i: number) => (
+                          <div key={i} className="flex justify-between items-center p-3 border-b border-gray-50 last:border-0 hover:bg-gray-50">
+                            <div>
+                              <p className="font-semibold text-gray-900 text-sm">{item.ticker || item.symbol || item.name || 'Unknown'}</p>
+                              {item.name && item.ticker && <p className="text-xs text-gray-500">{item.name}</p>}
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium text-gray-900 text-sm">₹{item.price || item.lastPrice || '—'}</p>
+                              <p className="text-xs font-semibold text-green-600">
+                                +{item.change || '0'} (+{item.percentChange || item.pChange || '0'}%)
+                              </p>
+                            </div>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-              {ipoRecent.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">📊 Recently Listed</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {ipoRecent.slice(0, 6).map((item: any, i: number) => (
-                      <div key={i} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                        <p className="font-medium text-gray-900 text-sm">{item.company}</p>
-                        <div className="flex justify-between mt-2 text-xs text-gray-500 flex-wrap gap-1">
-                          <span>Issue: {item.issue_price}</span>
-                          <span>Listed: {item.listing_open || '—'}</span>
-                          <span className="text-blue-600 font-medium">{item.total_subscription} sub</span>
-                        </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
+
+                  {/* Losers */}
+                  {market.losers && market.losers.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <TrendingDown className="w-4 h-4" /> Top Losers
+                      </p>
+                      <div className="bg-white rounded-xl border border-red-100 shadow-sm overflow-hidden">
+                        {market.losers.map((item: any, i: number) => (
+                          <div key={i} className="flex justify-between items-center p-3 border-b border-gray-50 last:border-0 hover:bg-gray-50">
+                            <div>
+                              <p className="font-semibold text-gray-900 text-sm">{item.ticker || item.symbol || item.name || 'Unknown'}</p>
+                              {item.name && item.ticker && <p className="text-xs text-gray-500">{item.name}</p>}
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium text-gray-900 text-sm">₹{item.price || item.lastPrice || '—'}</p>
+                              <p className="text-xs font-semibold text-red-500">
+                                {item.change || '0'} ({item.percentChange || item.pChange || '0'}%)
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-              {ipoActive.length === 0 && ipoRecent.length === 0 && (
-                <EmptyState msg="No active IPO data at this time." />
               )}
             </div>
           )}

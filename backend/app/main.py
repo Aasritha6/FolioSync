@@ -8,6 +8,7 @@ import io
 import os
 import re
 import tempfile
+import asyncio
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -349,10 +350,10 @@ class PortfolioContext(BaseModel):
     mfs: list = []
 
 @app.post("/api/macro")
-def get_macro_impact(portfolio: PortfolioContext = Body(default=PortfolioContext())):
+async def get_macro_impact(portfolio: PortfolioContext = Body(default=PortfolioContext())):
     headlines = []
     try:
-        news_data = call_wire("e8f7cfde-7052-4dd5-80e5-5473707347b3", {})
+        news_data = await asyncio.to_thread(call_wire, "e8f7cfde-7052-4dd5-80e5-5473707347b3", {})
         if isinstance(news_data, list):
             headlines = [i.get("title", i.get("headline", "")) for i in news_data[:6] if i.get("title") or i.get("headline")]
         elif isinstance(news_data, dict):
@@ -363,7 +364,7 @@ def get_macro_impact(portfolio: PortfolioContext = Body(default=PortfolioContext
 
     if not headlines:
         try:
-            tv_data = call_wire("5cdf2cd5-a0c3-4774-9fe9-ce2847210dfa", {})
+            tv_data = await asyncio.to_thread(call_wire, "5cdf2cd5-a0c3-4774-9fe9-ce2847210dfa", {})
             if isinstance(tv_data, list):
                 headlines = [i.get("title", "") for i in tv_data[:6]]
         except Exception as e:
@@ -381,7 +382,8 @@ def get_macro_impact(portfolio: PortfolioContext = Body(default=PortfolioContext
     # Convert Pydantic model to dict to pass to LLM
     portfolio_dict = portfolio.dict() if portfolio else {}
     
-    analysis = analyze_macro_impact_with_llm(
+    analysis = await asyncio.to_thread(
+        analyze_macro_impact_with_llm,
         news_items=headlines,
         portfolio_context=portfolio_dict
     )
@@ -393,28 +395,21 @@ def get_macro_impact(portfolio: PortfolioContext = Body(default=PortfolioContext
     }
 
 
-@app.get("/api/ipo")
-def get_ipo():
-    try:
-        return call_wire("mc_ipo", {}) or {}
-    except:
-        return {}
-
 @app.get("/api/market")
-def get_market_overview():
+async def get_market_overview():
     result = {}
     for cat in ["gainers", "losers"]:
         try:
-            data = call_wire("95555e4c-fb90-4f79-8b42-dfa31768944d", {"category": cat, "count": 5})
+            data = await asyncio.to_thread(call_wire, "95555e4c-fb90-4f79-8b42-dfa31768944d", {"category": cat, "count": 5})
             result[cat] = data if isinstance(data, list) else []
         except:
             result[cat] = []
     return result
 
 @app.get("/api/stock/{symbol}")
-def get_stock_quote(symbol: str):
+async def get_stock_quote(symbol: str):
     try:
-        return call_wire("661cf7ce-77f3-4cd4-b02f-8ff875613f37", {"ticker": symbol}) or {}
+        return await asyncio.to_thread(call_wire, "661cf7ce-77f3-4cd4-b02f-8ff875613f37", {"ticker": symbol}) or {}
     except:
         return {}
 
