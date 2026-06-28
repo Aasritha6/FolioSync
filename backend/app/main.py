@@ -409,3 +409,46 @@ async def get_stock_quote(symbol: str):
     except:
         return {}
 
+@app.get("/api/screener/{symbol}")
+async def get_screener_docs(symbol: str):
+    try:
+        return await asyncio.to_thread(call_wire, "scr_company_documents", {"company": symbol, "consolidated": True}) or {}
+    except:
+        return {}
+
+@app.get("/api/morningstar")
+async def get_morningstar():
+    try:
+        return await asyncio.to_thread(call_wire, "act_morningstar_in_fund_category_returns", {"period": "Y1"}) or {}
+    except:
+        return {}
+
+@app.get("/api/nse/highlow")
+async def get_nse_highlow():
+    try:
+        return await asyncio.to_thread(call_wire, "nse_52week_highlow", {}) or {}
+    except:
+        return {}
+
+@app.get("/api/et/adv-dec")
+async def get_et_adv_dec():
+    try:
+        return await asyncio.to_thread(call_wire, "et_advance_decline", {}) or {}
+    except:
+        return {}
+
+@app.get("/api/rbi/forex")
+async def get_rbi_forex():
+    try:
+        # Hardcoding the dates as per user request just to ensure it fires properly
+        params = {
+            "fx_component": "TR",
+            "currency_code": "USD",
+            "from_date": "2025-06-06 00:00:00",
+            "to_date": "2026-06-06 00:00:00",
+            "frequency": "Weekly"
+        }
+        return await asyncio.to_thread(call_wire, "act_data_rbi_org_in_foreign_exchange_reserves", params) or {}
+    except:
+        return {}
+

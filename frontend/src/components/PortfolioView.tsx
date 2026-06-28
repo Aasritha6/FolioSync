@@ -19,8 +19,8 @@ const fmtCompact = (n: number) => {
   return `₹${fmt(n)}`;
 };
 
-export default function PortfolioView({ portfolio, macro, ipo, macroLoading, onReset }: PortfolioViewProps) {
-  const [activeTab, setActiveTab] = useState<'holdings' | 'macro' | 'ipo'>('holdings');
+export default function PortfolioView({ portfolio, macro, ipo, advancedData, macroLoading, onReset }: PortfolioViewProps) {
+  const [activeTab, setActiveTab] = useState<'holdings' | 'macro' | 'ipo' | 'advanced'>('holdings');
 
   const isCAS = portfolio?.type === 'cas_pdf';
   const mfs: any[]    = portfolio?.mfs    || [];
@@ -37,6 +37,7 @@ export default function PortfolioView({ portfolio, macro, ipo, macroLoading, onR
   const tabs = [
     { key: 'holdings', label: isCAS ? '📂 MF Holdings' : '📋 Stock Holdings' },
     { key: 'macro',    label: '🌐 Macro Intelligence' },
+    { key: 'advanced', label: '📊 Advanced Data' },
     { key: 'ipo',      label: '🚀 IPO Tracker' },
   ];
 
@@ -316,6 +317,141 @@ export default function PortfolioView({ portfolio, macro, ipo, macroLoading, onR
               )}
               {ipoActive.length === 0 && ipoRecent.length === 0 && (
                 <EmptyState msg="No active IPO data at this time." />
+              )}
+            </div>
+          )}
+
+          {/* ── ADVANCED DATA TAB ────────────────────────────────── */}
+          {activeTab === 'advanced' && (
+            <div className="space-y-8">
+              {macroLoading && <EmptyState msg="Loading Advanced Market Data streams from Anakin Wires..." />}
+              {!macroLoading && (
+                <>
+                  {/* Screener & RBI Section */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Screener Announcements */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <span className="text-xl">📄</span> Screener: Corporate Announcements
+                      </h3>
+                      {advancedData?.screener?.documents?.Announcements ? (
+                        <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                          {advancedData.screener.documents.Announcements.slice(0, 5).map((ann: any, i: number) => (
+                            <a key={i} href={ann.url} target="_blank" rel="noreferrer" className="block p-3 rounded-lg bg-gray-50 hover:bg-blue-50 border border-gray-100 transition-colors">
+                              <p className="text-xs text-blue-700 font-medium line-clamp-2">{ann.title}</p>
+                            </a>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-400">No announcements available for top holding.</p>
+                      )}
+                    </div>
+
+                    {/* RBI Forex Reserves */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <span className="text-xl">🏦</span> RBI: Foreign Exchange Reserves
+                      </h3>
+                      {advancedData?.rbi?.status === 'processing' || !advancedData?.rbi ? (
+                         <div className="flex items-center justify-center h-24 text-xs text-gray-400">Fetching latest RBI data...</div>
+                      ) : (
+                         <div className="text-sm text-gray-600">Forex data loaded from RBI endpoint.</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Market Breadth & High/Low */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* ET Advance / Decline */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <span className="text-xl">📊</span> Market Breadth (Nifty 50)
+                      </h3>
+                      {advancedData?.et?.data?.[0] ? (
+                        <div>
+                          <div className="flex justify-between items-end mb-2">
+                            <div>
+                              <p className="text-2xl font-bold text-gray-900">{advancedData.et.data[0].current}</p>
+                              <p className={`text-sm font-semibold ${advancedData.et.data[0].change > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                                {advancedData.et.data[0].change > 0 ? '+' : ''}{advancedData.et.data[0].change} ({advancedData.et.data[0].change_pct}%)
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-gray-500">Advances / Declines</p>
+                              <p className="font-semibold text-gray-800">
+                                <span className="text-green-600">{advancedData.et.data[0].advances}</span> / <span className="text-red-500">{advancedData.et.data[0].declines}</span>
+                              </p>
+                            </div>
+                          </div>
+                          <div className="w-full bg-red-500 rounded-full h-2 mt-4 flex overflow-hidden">
+                            <div className="bg-green-500 h-full" style={{ width: `${(advancedData.et.data[0].advances / 50) * 100}%` }}></div>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-400">Advance/Decline data unavailable.</p>
+                      )}
+                    </div>
+
+                    {/* NSE 52 Week Highs */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <span className="text-xl">🚀</span> NSE: New 52-Week Highs
+                      </h3>
+                      {advancedData?.nse?.data ? (
+                        <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                          {advancedData.nse.data.slice(0, 5).map((stock: any, i: number) => (
+                            <div key={i} className="flex justify-between items-center p-2 rounded bg-gray-50">
+                              <p className="text-xs font-semibold text-gray-900">{stock.symbol}</p>
+                              <div className="text-right">
+                                <p className="text-xs font-medium text-gray-800">₹{stock.new_52w_value}</p>
+                                <p className="text-[10px] text-green-600 font-bold">+{stock.pct_change.toFixed(2)}%</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-400">High/Low data unavailable.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Morningstar Category Returns */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                    <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <span className="text-xl">🌟</span> Morningstar: Fund Category Returns (1Y)
+                    </h3>
+                    {advancedData?.morningstar?.items ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                          <thead>
+                            <tr className="text-xs text-gray-500 border-b border-gray-100 uppercase tracking-wide">
+                              <th className="pb-3 pr-4">Category</th>
+                              <th className="pb-3 pr-4">Asset Class</th>
+                              <th className="pb-3 pr-4 text-right">Avg Return</th>
+                              <th className="pb-3 text-right">Top Performer</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-50">
+                            {advancedData.morningstar.items.slice(0, 6).map((item: any, i: number) => (
+                              <tr key={i} className="hover:bg-gray-50">
+                                <td className="py-3 pr-4 font-medium text-gray-800">{item.category_name}</td>
+                                <td className="py-3 pr-4 text-gray-500 text-xs">{item.asset_class}</td>
+                                <td className={`py-3 pr-4 text-right font-semibold ${item.returns.category_average_pct >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                                  {item.returns.category_average_pct}%
+                                </td>
+                                <td className="py-3 text-right font-semibold text-blue-600">
+                                  {item.returns.top_performer_pct}%
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-400">Morningstar data unavailable.</p>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           )}

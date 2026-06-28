@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [portfolio, setPortfolio]     = useState<any>(null);
   const [macro, setMacro]             = useState<any>(null);
   const [ipo, setIpo]                 = useState<any>(null);
+  const [advancedData, setAdvancedData] = useState<any>({ screener: null, morningstar: null, nse: null, et: null, rbi: null });
   const [loading, setLoading]         = useState(false);
   const [macroLoading, setMacroLoading] = useState(false);
   const [dragOver, setDragOver]       = useState(false);
@@ -62,12 +63,28 @@ export default function Dashboard() {
   const loadMacroAndIPO = async (portfolioData: any) => {
     setMacroLoading(true);
     try {
-      const [macroRes, ipoRes] = await Promise.allSettled([
+      const topSymbol = portfolioData?.stocks?.[0]?.symbol || 'INFY';
+      
+      const [macroRes, ipoRes, scrRes, msRes, nseRes, etRes, rbiRes] = await Promise.allSettled([
         axios.post(`${API_BASE}/macro`, portfolioData),
         axios.get(`${API_BASE}/ipo`),
+        axios.get(`${API_BASE}/screener/${topSymbol}`),
+        axios.get(`${API_BASE}/morningstar`),
+        axios.get(`${API_BASE}/nse/highlow`),
+        axios.get(`${API_BASE}/et/adv-dec`),
+        axios.get(`${API_BASE}/rbi/forex`)
       ]);
+      
       if (macroRes.status === 'fulfilled') setMacro(macroRes.value.data);
       if (ipoRes.status  === 'fulfilled') setIpo(ipoRes.value.data);
+      
+      setAdvancedData({
+        screener: scrRes.status === 'fulfilled' ? scrRes.value.data : null,
+        morningstar: msRes.status === 'fulfilled' ? msRes.value.data : null,
+        nse: nseRes.status === 'fulfilled' ? nseRes.value.data : null,
+        et: etRes.status === 'fulfilled' ? etRes.value.data : null,
+        rbi: rbiRes.status === 'fulfilled' ? rbiRes.value.data : null,
+      });
     } catch (e) {
       console.error(e);
     } finally {
@@ -91,6 +108,7 @@ export default function Dashboard() {
     setPortfolio(null);
     setMacro(null);
     setIpo(null);
+    setAdvancedData({ screener: null, morningstar: null, nse: null, et: null, rbi: null });
     setError('');
     setNeedsPassword(false);
     setPendingFile(null);
@@ -205,6 +223,7 @@ export default function Dashboard() {
             portfolio={portfolio}
             macro={macro}
             ipo={ipo}
+            advancedData={advancedData}
             macroLoading={macroLoading}
             onReset={reset}
           />
