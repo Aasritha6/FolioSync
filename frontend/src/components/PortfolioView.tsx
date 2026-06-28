@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { RefreshCw, TrendingUp, TrendingDown } from 'lucide-react';
+import { useState } from 'react';
+import { RefreshCw } from 'lucide-react';
 
 interface PortfolioViewProps {
   portfolio: any;
   macro: any;
-  market: any;
+  ipo: any;
+  advancedData: any;
   macroLoading: boolean;
   onReset: () => void;
 }
