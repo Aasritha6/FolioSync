@@ -23,7 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+@app.get("/api/health")
 def read_root():
     return {"status": "ok", "message": "FolioSync API is running"}
 
